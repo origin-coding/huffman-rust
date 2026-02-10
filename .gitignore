@@ -1,0 +1,43 @@
+# Rust 构建产物
+/target/
+**/*.rs.bk
+perf.data
+perf.data.old
+
+# JetBrains IDE
+.idea/
+*.iml
+*.iws
+
+# VS Code
+.vscode/
+
+# MacOS 系统垃圾文件
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows 系统垃圾文件
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux 系统垃圾文件
+*~
+
+# Tauri 和前端文件（用于后续的 GUI 实现）
+node_modules/
+/dist/
+/build/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Tauri 特定的构建产物
+src-tauri/target/
