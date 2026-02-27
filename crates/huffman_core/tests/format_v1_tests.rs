@@ -163,13 +163,13 @@ fn test_frequency_table_eof_protection() {
     // 【安全测试】测试由于文件损坏导致的提前结束 (Unexpected EOF)
 
     // 我们手工构造一个二进制序列：
-    // count = 10 (需要占 4 字节：00 00 00 0A)
-    // 但是后面我们只给 1 个 entry 的数据 (1 字节 symbol + 4 字节 frequency = 5 字节)
-    // 总数据长度只有 9 字节，远远不够 10 个 entry 的长度
+    // count = 10 (需要占 2 字节：00 0A)
+    // 但是后面我们只给 1 个 entry 的数据 (1 字节 symbol + 8 字节 frequency = 9 字节)
+    // 总数据长度只有 11 字节，远远不够 10 个 entry 的长度
     let corrupted_data: &[u8] = &[
-        0x00, 0x00, 0x00, 0x0A, // count = 10
+        0x00, 0x0A, // count = 10
         0x41, // symbol = 'A'
-        0x00, 0x00, 0x00, 0x05, // frequency = 5
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, // frequency = 5
     ];
 
     let mut cursor = Cursor::new(corrupted_data);

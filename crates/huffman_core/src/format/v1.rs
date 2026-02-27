@@ -108,7 +108,7 @@ pub struct FrequencyEntry {
     pub symbol: u8,
 
     /// 字符出现频率
-    pub frequency: u32,
+    pub frequency: u64,
 }
 
 /// 频次表区块结构体
@@ -116,7 +116,7 @@ pub struct FrequencyEntry {
 #[brw(big)]
 pub struct FrequencyTable {
     /// 频率表项数量
-    pub count: u32,
+    pub count: u16,
 
     /// 频率表项数组
     #[br(count = count)]
