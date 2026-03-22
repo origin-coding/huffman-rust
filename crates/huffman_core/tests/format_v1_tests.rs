@@ -1,3 +1,5 @@
+pub mod core_tree_tests;
+
 use binrw::{BinRead, BinWrite};
 use huffman_core::format::v1::{EntryFlags, GlobalFlags};
 use huffman_core::format::{EntryHeader, FrequencyTable, GlobalFooter, GlobalHeader, VERSION_1};
