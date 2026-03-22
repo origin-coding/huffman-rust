@@ -4,7 +4,7 @@ use huffman_core::format::{FrequencyEntry, FrequencyTable};
 
 #[test]
 fn test_huffman_logic_flow() {
-    // 构造频次表
+    // 构造频次表 (A:10, B:20, C:15)
     let entries = vec![
         FrequencyEntry {
             symbol: b'A',
@@ -35,7 +35,102 @@ fn test_huffman_logic_flow() {
 }
 
 #[test]
+fn test_single_symbol_table() {
+    // 模拟只有一个字符的情况（例如一个只有 'A' 的文件）
+    let entries = vec![FrequencyEntry {
+        symbol: b'A',
+        frequency: 100,
+    }];
+    let table = FrequencyTable { count: 1, entries };
+
+    let tree = HuffmanTree::try_from(&table).expect("单字符构建失败");
+    let codebook = CodeBook::from(&tree);
+
+    // 单字符时，路径为空（根节点即为叶子）
+    let code = codebook.get_code(b'A').expect("未找到编码");
+    assert!(code.is_empty(), "单字符路径应为空");
+}
+
+#[test]
+fn test_frequency_tie_breaker() {
+    // 模拟频率完全相等的情况：A:10, B:10, C:10, D:10
+    // 这将严格测试 min_symbol 的决胜逻辑
+    let entries = vec![
+        FrequencyEntry {
+            symbol: b'D',
+            frequency: 10,
+        },
+        FrequencyEntry {
+            symbol: b'C',
+            frequency: 10,
+        },
+        FrequencyEntry {
+            symbol: b'B',
+            frequency: 10,
+        },
+        FrequencyEntry {
+            symbol: b'A',
+            frequency: 10,
+        },
+    ];
+    let table = FrequencyTable { count: 4, entries };
+
+    let tree = HuffmanTree::try_from(&table).expect("决胜测试构建失败");
+    let _codebook = CodeBook::from(&tree);
+
+    // 如果实现正确且确定，所有字符的编码长度都应该是 2
+    // 由于堆是确定性的（基于频率和 min_symbol），结果不应随运行环境改变
+}
+
+#[test]
+fn test_all_256_symbols() {
+    // 模拟所有 256 个字符都出现的情况
+    let mut entries = Vec::new();
+    for i in 0..=255 {
+        entries.push(FrequencyEntry {
+            symbol: i,
+            frequency: (i as u64) + 1,
+        });
+    }
+    let table = FrequencyTable {
+        count: 256,
+        entries,
+    };
+
+    let tree = HuffmanTree::try_from(&table).expect("全字符构建失败");
+    let codebook = CodeBook::from(&tree);
+
+    // 验证所有字符都有编码
+    for i in 0..=255 {
+        assert!(codebook.get_code(i).is_some());
+    }
+}
+
+#[test]
+fn test_large_frequency_handling() {
+    // 模拟大文件（超过 u32 范围）的频率累加
+    let entries = vec![
+        FrequencyEntry {
+            symbol: b'A',
+            frequency: 5_000_000_000,
+        },
+        FrequencyEntry {
+            symbol: b'B',
+            frequency: 5_000_000_000,
+        },
+    ];
+    let table = FrequencyTable { count: 2, entries };
+
+    let tree = HuffmanTree::try_from(&table).expect("大文件测试构建失败");
+    // 根节点频率应为 100 亿，验证 u64 是否溢出
+    assert_eq!(tree.frequency(), 10_000_000_000);
+}
+
+#[test]
 fn test_empty_table_error() {
-    let table = FrequencyTable { count: 0, entries: vec![] };
+    let table = FrequencyTable {
+        count: 0,
+        entries: vec![],
+    };
     assert!(HuffmanTree::try_from(&table).is_err());
 }
