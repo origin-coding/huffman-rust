@@ -1,4 +1,5 @@
 use huffman_core::core::codebook::CodeBook;
+use huffman_core::core::error::CoreError;
 use huffman_core::core::tree::HuffmanTree;
 use huffman_core::format::{FrequencyEntry, FrequencyTable};
 
@@ -132,5 +133,60 @@ fn test_empty_table_error() {
         count: 0,
         entries: vec![],
     };
-    assert!(HuffmanTree::try_from(&table).is_err());
+    let err = HuffmanTree::try_from(&table).expect_err("空表应返回错误");
+    assert_eq!(err, CoreError::EmptyFrequencyTable);
+}
+
+#[test]
+fn test_frequency_count_mismatch_error() {
+    let table = FrequencyTable {
+        count: 2,
+        entries: vec![FrequencyEntry {
+            symbol: b'A',
+            frequency: 1,
+        }],
+    };
+
+    let err = HuffmanTree::try_from(&table).expect_err("count 与 entries 长度不一致应失败");
+    assert_eq!(
+        err,
+        CoreError::FrequencyCountMismatch {
+            declared: 2,
+            actual: 1,
+        }
+    );
+}
+
+#[test]
+fn test_duplicate_symbol_error() {
+    let table = FrequencyTable {
+        count: 2,
+        entries: vec![
+            FrequencyEntry {
+                symbol: b'A',
+                frequency: 1,
+            },
+            FrequencyEntry {
+                symbol: b'A',
+                frequency: 2,
+            },
+        ],
+    };
+
+    let err = HuffmanTree::try_from(&table).expect_err("重复 symbol 应失败");
+    assert_eq!(err, CoreError::DuplicateSymbol { symbol: b'A' });
+}
+
+#[test]
+fn test_zero_frequency_error() {
+    let table = FrequencyTable {
+        count: 1,
+        entries: vec![FrequencyEntry {
+            symbol: b'A',
+            frequency: 0,
+        }],
+    };
+
+    let err = HuffmanTree::try_from(&table).expect_err("频次为 0 应失败");
+    assert_eq!(err, CoreError::ZeroFrequency { symbol: b'A' });
 }
