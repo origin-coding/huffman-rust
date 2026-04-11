@@ -1,3 +1,4 @@
+use bitvec::prelude::*;
 use huffman_core::core::codebook::CodeBook;
 use huffman_core::core::error::CoreError;
 use huffman_core::core::tree::HuffmanTree;
@@ -32,7 +33,7 @@ fn test_huffman_logic_flow() {
 
     // 验证确定性：由于 A(10) < C(15)，且 A+C(25) > B(20)
     // 最终 B 的编码应为 [false] (0)，A 为 [true, false] (10)
-    assert_eq!(codebook.get_code(b'A').unwrap(), &vec![true, false]);
+    assert_eq!(codebook.get_code(b'A').unwrap(), bitvec![u8, Msb0; 1, 0]);
 }
 
 #[test]
