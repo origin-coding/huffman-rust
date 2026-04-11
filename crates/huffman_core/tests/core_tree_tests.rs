@@ -157,3 +157,36 @@ fn test_frequency_count_mismatch_error() {
         }
     );
 }
+
+#[test]
+fn test_codebook_to_bitwriter_integration() {
+    use huffman_core::core::bit_io::BitWriter;
+    use std::io::Cursor;
+
+    // 1. 模拟环境：A:1, B:1 (A -> 0, B -> 1)
+    let entries = vec![
+        FrequencyEntry { symbol: b'A', frequency: 1 },
+        FrequencyEntry { symbol: b'B', frequency: 1 },
+    ];
+    let table = FrequencyTable { count: 2, entries };
+    let tree = HuffmanTree::try_from(&table).unwrap();
+    let codebook = CodeBook::from(&tree);
+
+    // 2. 模拟编码数据： "ABA"
+    let mut output = Cursor::new(Vec::new());
+    let mut writer = BitWriter::new(&mut output);
+
+    let data = b"ABA";
+    for &byte in data {
+        let code = codebook.get_code(byte).expect("符号应存在于编码表中");
+        writer.write_bits(code).unwrap();
+    }
+
+    // 3. 结束写入并检查 padding
+    let padding = writer.finalize().unwrap();
+    
+    // "ABA" 编码序列: A(0) + B(1) + A(0) = 010
+    // 补齐 5 位 0: 010 00000 -> 0x40
+    assert_eq!(padding, 5);
+    assert_eq!(output.into_inner(), vec![0x40]);
+}
