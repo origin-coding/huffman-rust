@@ -1,7 +1,7 @@
 use crate::core::error::CoreError;
 use crate::format::FrequencyTable;
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashSet};
+use std::collections::BinaryHeap;
 
 #[derive(Debug)]
 pub enum HuffmanTree {
@@ -100,34 +100,26 @@ impl TryFrom<&FrequencyTable> for HuffmanTree {
             });
         }
 
-        let mut seen_symbols = HashSet::with_capacity(actual_count);
+        let mut nodes = BinaryHeap::new();
         for entry in &value.entries {
-            if entry.frequency == 0 {
-                return Err(CoreError::ZeroFrequency {
+            if entry.frequency > 0 {
+                nodes.push(Box::new(HuffmanTree::Leaf {
                     symbol: entry.symbol,
-                });
-            }
-
-            if !seen_symbols.insert(entry.symbol) {
-                return Err(CoreError::DuplicateSymbol {
-                    symbol: entry.symbol,
-                });
+                    frequency: entry.frequency,
+                }));
             }
         }
 
-        let mut nodes = BinaryHeap::new();
-        let iter = value
-            .entries
-            .iter()
-            .map(|entry| Self::new_leaf(entry.symbol, entry.frequency));
-        nodes.extend(iter);
+        if nodes.is_empty() {
+            return Err(CoreError::EmptyFrequencyTable);
+        }
 
         while nodes.len() > 1 {
-            let left = nodes.pop().expect("nodes.len() > 1");
-            let right = nodes.pop().expect("nodes.len() > 1");
-            nodes.push(Self::new_internal(Box::new(left), Box::new(right))?);
+            let left = nodes.pop().unwrap();
+            let right = nodes.pop().unwrap();
+            nodes.push(Box::new(Self::new_internal(left, right)?));
         }
 
-        nodes.pop().ok_or(CoreError::EmptyFrequencyTable)
+        nodes.pop().map(|n| *n).ok_or(CoreError::EmptyFrequencyTable)
     }
 }

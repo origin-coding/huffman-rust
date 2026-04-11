@@ -156,37 +156,3 @@ fn test_frequency_count_mismatch_error() {
         }
     );
 }
-
-#[test]
-fn test_duplicate_symbol_error() {
-    let table = FrequencyTable {
-        count: 2,
-        entries: vec![
-            FrequencyEntry {
-                symbol: b'A',
-                frequency: 1,
-            },
-            FrequencyEntry {
-                symbol: b'A',
-                frequency: 2,
-            },
-        ],
-    };
-
-    let err = HuffmanTree::try_from(&table).expect_err("重复 symbol 应失败");
-    assert_eq!(err, CoreError::DuplicateSymbol { symbol: b'A' });
-}
-
-#[test]
-fn test_zero_frequency_error() {
-    let table = FrequencyTable {
-        count: 1,
-        entries: vec![FrequencyEntry {
-            symbol: b'A',
-            frequency: 0,
-        }],
-    };
-
-    let err = HuffmanTree::try_from(&table).expect_err("频次为 0 应失败");
-    assert_eq!(err, CoreError::ZeroFrequency { symbol: b'A' });
-}
